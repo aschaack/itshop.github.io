@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daimler Truck IT Shop - License Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Daimler Truck Branding - Farben und Schriftarten */
+        :root {
+            --dt-primary-dark: #001f3f; /* Dunkelblau / Fast Schwarz */
+            --dt-primary-light: #ffffff; /* Weiß */
+            --dt-accent-orange: #f47d00; /* Daimler Truck Orange */
+            --dt-success-green: #00A651; /* Passendes Grün für Erfolg */
+            --dt-text-dark: #333333;
+            --dt-text-light: #555555;
+            --dt-border-light: #e0e0e0;
+            --dt-bg-light: #f9f9f9;
+        }
+
+        body { 
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0; 
+            padding: 0; 
+            background-color: var(--dt-bg-light); 
+            color: var(--dt-text-dark); 
+            line-height: 1.6;
+        }
+        
+        header { 
+            background-color: var(--dt-primary-dark); 
+            color: var(--dt-primary-light); 
+            padding: 20px 40px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2); 
+            position: sticky;
+            top: 0;
+            z-index: 1000; /* Header is on top */
+        }
+        header h1 { margin: 0; font-size: 28px; font-weight: 700; }
+        .logo { 
+            font-weight: 700;
+            font-size: 24px; 
+            letter-spacing: 0.5px;
+            color: var(--dt-primary-light);
+        }
+        nav a { 
+            color: var(--dt-primary-light); 
+            text-decoration: none; 
+            margin-left: 30px; 
+            font-size: 16px; 
+            transition: color 0.3s ease, border-bottom 0.3s ease; 
+            padding-bottom: 5px;
+        }
+        nav a:hover { 
+            color: var(--dt-accent-orange); 
+            border-bottom: 2px solid var(--dt-accent-orange); 
+        }
+
+        /* --- Notification Banner Style --- */
+        .notification-banner {
+            position: fixed;
+            top: -100px; /* Startet außerhalb des Bildschirms */
+            left: 0;
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--dt-primary-light);
+            text-align: center;
+            /* GEÄNDERT: z-index ist jetzt 999 (hinter dem Header) */
+            z-index: 999; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transition: top 0.5s ease-in-out;
+            box-sizing: border-box;
+            background-color: var(--dt-success-green);
+        }
+        
+        .notification-banner.warning {
+            background-color: var(--dt-accent-orange);
+        }
+        
+        .notification-banner.show {
+            /* GEÄNDERT: top ist jetzt 64px (Header-Höhe) */
+            top: 64px; 
+        }
+        /* --- ENDE: Notification Banner Style --- */
+
+
+        .container { 
+            max-width: 1200px; 
+            margin: 40px auto; 
+            padding: 30px; 
+            background-color: var(--dt-primary-light); 
+            border-radius: 8px; 
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08); 
+        }
+        
+        h2 { 
+            font-size: 32px; 
+            color: var(--dt-primary-dark); 
+            margin-bottom: 30px; 
+            border-bottom: 2px solid var(--dt-border-light);
+            padding-bottom: 15px;
+            font-weight: 700;
+        }
+        h3 { 
+            font-size: 22px; 
+            color: var(--dt-primary-dark); 
+            margin-top: 0; 
+            margin-bottom: 15px; 
+            font-weight: 700;
+        }
+        
+        .product-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+            gap: 30px; 
+        }
+        .product-card { 
+            border: 1px solid var(--dt-border-light); 
+            border-radius: 8px; 
+            overflow: hidden; 
+            background-color: var(--dt-primary-light); 
+            transition: transform 0.3s ease, box-shadow 0.3s ease; 
+            cursor: pointer; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .product-card:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 12px 25px rgba(0,0,0,0.15); 
+        }
+        
+        .product-image-wrapper { 
+            width: 100%; 
+            height: 180px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-bottom: 1px solid var(--dt-border-light); 
+            padding: 15px; 
+            box-sizing: border-box; 
+            background-color: #fcfcfc;
+        }
+        .product-card img { 
+            max-width: 90%;
+            max-height: 90%; 
+            object-fit: contain; 
+        }
+        
+        .product-info { 
+            padding: 25px; 
+            flex-grow: 1; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .product-info p { 
+            margin-bottom: 20px; 
+            font-size: 15px; 
+            color: var(--dt-text-light); 
+            flex-grow: 1; 
+        }
+        .product-info .price { 
+            font-size: 20px; 
+            font-weight: 700; 
+            color: var(--dt-primary-dark); 
+            margin-bottom: 20px; 
+        }
+        
+        .btn { 
+            display: block;
+            width: 100%;
+            background-color: var(--dt-accent-orange); 
+            color: var(--dt-primary-light); 
+            padding: 12px 25px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            text-decoration: none; 
+            font-size: 17px; 
+            font-weight: 700;
+            transition: background-color 0.3s ease, transform 0.1s ease; 
+            text-align: center; 
+        }
+        .btn:hover { 
+            background-color: #e07200;
+            transform: translateY(-2px);
+        }
+        .btn-secondary { 
+            background-color: var(--dt-border-light); 
+            color: var(--dt-text-dark); 
+            margin-left: 0;
+            margin-top: 15px;
+        }
+        .btn-secondary:hover { 
+            background-color: #d0d0d0; 
+            color: var(--dt-text-dark);
+            transform: translateY(-2px);
+        }
+        
+        .product-detail { 
+            display: flex; 
+            gap: 50px; 
+            align-items: flex-start; 
+            flex-wrap: wrap;
+        }
+        .product-detail-img-wrapper { 
+            width: 100%; 
+            max-width: 450px;
+            height: 350px; 
+            border: 1px solid var(--dt-border-light); 
+            border-radius: 8px; 
+            padding: 20px; 
+            background-color: var(--dt-bg-light); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            flex-shrink: 0; 
+        }
+        .product-detail img { 
+            max-width: 90%; 
+            max-height: 90%; 
+            object-fit: contain; 
+        }
+        
+        .detail-content { flex-grow: 1; min-width: 300px; }
+        .detail-content h2 { 
+            color: var(--dt-primary-dark); 
+            font-size: 38px; 
+            margin-top: 0; 
+            margin-bottom: 20px;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .detail-content h4 {
+            color: var(--dt-primary-dark);
+            font-size: 20px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        .detail-content .price { 
+            font-size: 26px; 
+            font-weight: 700; 
+            color: var(--dt-accent-orange); 
+            margin-bottom: 25px; 
+            display: block; 
+        }
+        .detail-content ul { 
+            list-style: none;
+            margin-left: 0; 
+            padding-left: 0;
+            line-height: 2; 
+            color: var(--dt-text-dark); 
+        }
+        .detail-content ul li::before {
+            content: '✓';
+            color: var(--dt-accent-orange);
+            font-weight: bold;
+            display: inline-block;
+            width: 1.5em;
+            margin-left: -1.5em;
+        }
+        
+        .cart-summary { 
+            border: 1px solid var(--dt-border-light); 
+            border-radius: 8px; 
+            padding: 30px; 
+            margin-top: 40px; 
+            background-color: var(--dt-bg-light); 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.02);
+        }
+        .cart-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 15px 0; 
+            border-bottom: 1px dashed var(--dt-border-light);
+        }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-item-name { 
+            font-weight: 700; 
+            color: var(--dt-primary-dark);
+        }
+        .cart-total { 
+            text-align: right; 
+            font-size: 24px; 
+            font-weight: 700; 
+            margin-top: 30px; 
+            color: var(--dt-primary-dark);
+        }
+        .empty-cart { 
+            text-align: center; 
+            color: var(--dt-text-light); 
+            font-style: italic; 
+            margin-top: 30px; 
+            font-size: 18px;
+        }
+        .back-link { 
+            display: inline-block; 
+            margin-bottom: 25px; 
+            color: var(--dt-accent-orange); 
+            text-decoration: none; 
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .back-link:hover { text-decoration: underline; }
+        
+        .order-confirmation { text-align: center; padding: 60px 0; }
+        .order-confirmation h2 { 
+            color: var(--dt-accent-orange); 
+            font-size: 42px; 
+            margin-bottom: 25px; 
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .order-confirmation p { 
+            font-size: 18px; 
+            line-height: 1.8; 
+            color: var(--dt-text-dark); 
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            header { padding: 15px 20px; }
+            header h1 { font-size: 24px; }
+            nav a { margin-left: 15px; font-size: 14px; }
+            .container { margin: 20px auto; padding: 20px; }
+            h2 { font-size: 28px; margin-bottom: 20px; }
+            .product-detail { flex-direction: column; gap: 30px; }
+            .product-detail-img-wrapper { max-width: 100%; height: 250px; }
+            .detail-content h2 { font-size: 32px; }
+            .detail-content .price { font-size: 22px; }
+            .cart-total { font-size: 20px; }
+            .order-confirmation h2 { font-size: 36px; }
+            
+            /* Responsive Banner Position */
+            .notification-banner.show {
+                /* 15px padding + 24px font + 15px padding = 54px */
+                top: 54px; 
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">Daimler Truck IT Shop</div>
+        <nav>
+            <a href="#" onclick="showPage('productList'); return false;">Products</a>
+            <a href="#" onclick="showPage('cart'); return false;" id="cartLink">Cart (<span id="cartCount">0</span>)</a>
+        </nav>
+    </header>
+
+    <div id="notificationBanner" class="notification-banner">
+        <span id="notificationMessage"></span>
+    </div>
+
+    <div class="container" id="productList">
+        <h2>Available Software Licenses</h2>
+        <div class="product-grid">
+            
+            <div class="product-card" data-id="signavio" data-name="Signavio Process Manager License" data-price="99.99">
+                <div class="product-image-wrapper">
+                    <img src="/Users/alexander.schaack/Library/CloudStorage/GoogleDrive-alexander.schaack@walkme.com/My Drive/Customer/Daimler Truck/img/signavio.png" alt="Signavio Logo">
+                </div>
+                <div class="product-info">
+                    <h3>Signavio Process Manager License</h3>
+                    <p>The leading solution for business process management and modeling.</p>
+                    <span class="price">€99.99 / Month</span>
+                    <button class="btn" onclick="showProductDetail('signavio'); event.stopPropagation();">View Details</button>
+                </div>
+            </div>
+
+            <div class="product-card" data-id="m365" data-name="Microsoft 365 Enterprise E5" data-price="50.00">
+                <div class="product-image-wrapper">
+                    <img src="/Users/alexander.schaack/Library/CloudStorage/GoogleDrive-alexander.schaack@walkme.com/My Drive/Customer/Daimler Truck/img/365.png" alt="Microsoft 365 Logo">
+                </div>
+                <div class="product-info">
+                    <h3>Microsoft 365 Enterprise E5</h3>
+                    <p>Comprehensive suite for productivity and collaboration.</p>
+                    <span class="price">€50.00 / Month</span>
+                    <button class="btn" onclick="showProductDetail('m365'); event.stopPropagation();">View Details</button>
+                </div>
+            </div>
+
+            <div class="product-card" data-id="sap" data-name="SAP S/4HANA User License" data-price="150.00">
+                <div class="product-image-wrapper">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/SAP_2011_logo.svg/512px-SAP_2011_logo.svg.png" alt="SAP Logo">
+                </div>
+                <div class="product-info">
+                    <h3>SAP S/4HANA User License</h3>
+                    <p>Access to SAP's intelligent ERP system.</p>
+                    <span class="price">€150.00 / Month</span>
+                    <button class="btn" onclick="showProductDetail('sap'); event.stopPropagation();">View Details</button>
+                </div>
+            </div>
+
+            <div class="product-card" data-id="jira" data-name="Jira Software License (Standard)" data-price="10.00">
+                <div class="product-image-wrapper">
+                    <img src="https://wac-cdn.atlassian.com/dam/jcr:e348b562-4152-4cdc-8a55-3d297e509cc8/Jira%20Software-blue.svg" alt="Jira Logo">
+                </div>
+                <div class="product-info">
+                    <h3>Jira Software License</h3>
+                    <p>Project management and issue tracking for agile teams.</p>
+                    <span class="price">€10.00 / Month</span>
+                    <button class="btn" onclick="showProductDetail('jira'); event.stopPropagation();">View Details</button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <div class="container" id="productDetail" style="display: none;">
+        <a href="#" class="back-link" onclick="showPage('productList'); return false;">&larr; Back to Product Overview</a>
+        <div class="product-detail">
+            <div class="product-detail-img-wrapper">
+                <img id="detailImage" src="" alt="Product Image">
+            </div>
+            <div class="detail-content">
+                <h2 id="detailName"></h2>
+                <span class="price" id="detailPrice"></span>
+                <p id="detailDescription"></p>
+                <h4>Features:</h4>
+                <ul id="detailFeatures"></ul>
+                <button class="btn" id="addToCartBtn" onclick="addToCartFromDetail();">Add to Cart</Gefällt mir!></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="cart" style="display: none;">
+        <h2>Your Cart</h2>
+        <div id="cartItems">
+            <p class="empty-cart">Your cart is empty.</p>
+        </div>
+        <div class="cart-summary" id="cartSummary" style="display: none;">
+            <div class="cart-total">Total: <span id="cartTotal">€0.00</span></div>
+            <button class="btn" onclick="placeOrder();">Submit Order</button>
+            <button class="btn btn-secondary" onclick="showPage('productList');">Continue Shopping</button>
+        </div>
+    </div>
+
+    <div class="container" id="orderConfirmation" style="display: none;">
+        <div class="order-confirmation">
+            <h2>🎉 Your License is Ready!</h2>
+            <p>Signavio is part of our standard software catalog and your license is <strong>activated immediately</strong>.</p>
+            <p>You can now log in to Signavio and start right away. WalkMe will guide you through your first steps.</p>
+            <p style="margin-top: 30px;"><a href="#" class="btn" onclick="resetShop(); return false;">Back to IT Shop</a></p>
+        </div>
+    </div>
+    <script>
+        const products = {
+            signavio: {
+                name: "Signavio Process Manager License",
+                price: 99.99,
+                description: "The Signavio Process Manager License allows you to intuitively model, analyze, and optimize business processes. Ideal for BPM experts and business analysts.",
+                image: "/Users/alexander.schaack/Library/CloudStorage/GoogleDrive-alexander.schaack@walkme.com/My Drive/Customer/Daimler Truck/img/signavio.png",
+                features: [
+                    "Intuitive BPMN 2.0 Modeling",
+                    "Collaborative teamwork",
+                    "Comprehensive process analysis tools",
+                    "Access to the Collaboration Hub"
+                ]
+            },
+            m365: {
+                name: "Microsoft 365 Enterprise E5",
+                price: 50.00,
+                description: "The premium suite from Microsoft for large enterprises, including advanced security, compliance, and analytics features.",
+                image: "/Users/alexander.schaack/Library/CloudStorage/GoogleDrive-alexander.schaack@walkme.com/My Drive/Customer/Daimler Truck/img/365.png",
+                features: [
+                    "Office Apps (Word, Excel, PowerPoint, Outlook)",
+                    "Microsoft Teams",
+                    "Advanced Security & Threat Protection",
+                    "Power BI Pro"
+                ]
+            },
+            sap: {
+                name: "SAP S/4HANA User License",
+                price: 150.00,
+                description: "Enables access to SAP's modern ERP system, optimized for in-memory computing and digital transformation.",
+                image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/SAP_2011_logo.svg/512px-SAP_2011_logo.svg.png",
+                features: [
+                    "Access to all relevant SAP Fiori Apps",
+                    "Real-time reporting and analytics",
+                    "Integrated business processes",
+                    "Robust security features"
+                ]
+            },
+            jira: {
+                name: "Jira Software License (Standard)",
+                price: 10.00,
+                description: "Jira Software is the leading tool for agile project development and issue tracking. Ideal for software teams.",
+                image: "https://wac-cdn.atlassian.com/dam/jcr:e348b562-4152-4cdc-8a55-3d297e509cc8/Jira%20Software-blue.svg",
+                features: [
+                    "Scrum and Kanban Boards",
+                    "Flexible Workflows",
+                    "Reports and Dashboards",
+                    "Integrations with other dev-tools"
+                ]
+            }
+        };
+
+        let cart = [];
+        let bannerTimeout;
+
+        /**
+         * Zeigt das Notification Banner an.
+         * @param {string} message - Die anzuzeigende Nachricht.
+         * @param {boolean} [isWarning=false] - True, wenn es eine Warnung (orange) sein soll, sonst Erfolg (grün).
+         */
+        function showNotification(message, isWarning = false) {
+            const banner = document.getElementById('notificationBanner');
+            const messageEl = document.getElementById('notificationMessage');
+
+            messageEl.textContent = message;
+
+            if (bannerTimeout) {
+                clearTimeout(bannerTimeout);
+            }
+
+            if (isWarning) {
+                banner.classList.add('warning');
+            } else {
+                banner.classList.remove('warning');
+            }
+
+            banner.classList.add('show');
+
+            bannerTimeout = setTimeout(() => {
+                banner.classList.remove('show');
+            }, 3000);
+        }
+
+        function showPage(pageId) {
+            document.getElementById('productList').style.display = 'none';
+            document.getElementById('productDetail').style.display = 'none';
+            document.getElementById('cart').style.display = 'none';
+            document.getElementById('orderConfirmation').style.display = 'none';
+
+            document.getElementById(pageId).style.display = 'block';
+
+            if (pageId === 'cart') {
+                renderCart();
+            }
+        }
+
+        function showProductDetail(productId) {
+            const product = products[productId];
+            document.getElementById('detailName').textContent = product.name;
+            document.getElementById('detailPrice').textContent = `€${product.price.toFixed(2)} / Month`;
+            document.getElementById('detailDescription').textContent = product.description;
+            document.getElementById('detailImage').src = product.image;
+
+            const featuresList = document.getElementById('detailFeatures');
+            featuresList.innerHTML = '';
+            product.features.forEach(feature => {
+                const li = document.createElement('li');
+                li.textContent = feature;
+                featuresList.appendChild(li);
+            });
+
+            document.getElementById('addToCartBtn').setAttribute('data-id', productId);
+            showPage('productDetail');
+        }
+
+        function addToCart(productId) {
+            const product = products[productId];
+            const existingItem = cart.find(item => item.id === productId);
+
+            if (existingItem) {
+                showNotification(`${product.name} is already in your cart!`, true);
+            } else {
+                cart.push({ id: productId, name: product.name, price: product.price, quantity: 1 });
+                updateCartCount();
+                showNotification(`${product.name} was added to your cart.`, false);
+            }
+        }
+
+        function addToCartFromDetail() {
+            const productId = document.getElementById('addToCartBtn').getAttribute('data-id');
+            addToCart(productId);
+        }
+
+        function updateCartCount() {
+            document.getElementById('cartCount').textContent = cart.length;
+        }
+
+        function renderCart() {
+            const cartItemsContainer = document.getElementById('cartItems');
+            const cartSummary = document.getElementById('cartSummary');
+            cartItemsContainer.innerHTML = '';
+            let total = 0;
+
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<p class="empty-cart">Your cart is empty.</p>';
+                cartSummary.style.display = 'none';
+            } else {
+                cart.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.classList.add('cart-item');
+                    itemDiv.innerHTML = `
+                        <span class="cart-item-name">${item.name}</span>
+                        <span>€${item.price.toFixed(2)}</span>
+                    `;
+                    cartItemsContainer.appendChild(itemDiv);
+                    total += item.price;
+                });
+                document.getElementById('cartTotal').textContent = `€${total.toFixed(2)}`;
+                cartSummary.style.display = 'block';
+            }
+        }
+
+        function placeOrder() {
+            if (cart.length === 0) {
+                showNotification("Your cart is empty!", true);
+                return;
+            }
+            showPage('orderConfirmation');
+            cart = []; 
+            updateCartCount();
+        }
+
+        function resetShop() {
+            cart = [];
+            updateCartCount();
+            showPage('productList');
+        }
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCartCount();
+            
+            document.querySelectorAll('.product-card').forEach(card => {
+                card.addEventListener('click', (event) => {
+                    if (!event.target.classList.contains('btn')) {
+                        showProductDetail(card.dataset.id);
+                    }
+                });
+            });
+
+            const adjustBannerPosition = () => {
+                const header = document.querySelector('header');
+                const headerHeight = header.offsetHeight;
+                
+                // Anpassen des CSS Media Query Ziels für das Banner
+                const mobileMediaQuery = window.matchMedia("(max-width: 768px)");
+                const bannerShowRule = [...document.styleSheets[0].cssRules].find(r => r.selectorText === '.notification-banner.show');
+                const mobileBannerShowRule = [...document.styleSheets[0].cssRules]
+                    .find(r => r.type === CSSRule.MEDIA_RULE && r.media.mediaText === '(max-width: 768px)')
+                    .cssRules[0]; // Annahme, dass es die erste Regel ist
+
+                if (mobileMediaQuery.matches) {
+                    // Verwenden Sie die mobile Header-Höhe
+                    // Sie ist im CSS als 54px hartcodiert, aber wir können sie dynamisch anpassen
+                     mobileBannerShowRule.style.top = `${headerHeight}px`;
+                } else {
+                    // Verwenden Sie die Desktop-Header-Höhe
+                    bannerShowRule.style.top = `${headerHeight}px`;
+                }
+            }
+            
+            // Führen Sie es einmal beim Laden aus
+            // adjustBannerPosition(); // Deaktiviert, da es die CSS-Regeln zur Laufzeit ändert, was komplexer ist
+            // window.addEventListener('resize', adjustBannerPosition); // Die CSS-Media-Query ist robuster
+        });
+
+    </script>
+</body>
+</html>
